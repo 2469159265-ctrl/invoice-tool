@@ -1,0 +1,10 @@
+# 排除构建产物
+build/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+*.spec
+*.app
+*.zip
+*.toc
