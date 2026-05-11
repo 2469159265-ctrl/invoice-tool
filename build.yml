@@ -1,0 +1,42 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'invoice_tool/invoice_extractor.py'
+      - 'invoice_tool/invoice_extractor_windows.spec'
+      - 'invoice_tool/requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r invoice_tool/requirements.txt
+
+      - name: Build EXE
+        run: |
+          cd invoice_tool
+          pyinstaller invoice_extractor_windows.spec --noconfirm --clean
+
+      - name: Package ZIP
+        run: |
+          Compress-Archive -Path invoice_tool/dist/发票识别工具.exe -DestinationPath invoice_tool/dist/发票识别工具_${{ github.run_number }}_Windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoice-tool-win-${{ github.run_number }}
+          path: invoice_tool/dist/发票识别工具*.zip
+          retention-days: 14
