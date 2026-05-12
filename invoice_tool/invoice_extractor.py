@@ -680,9 +680,8 @@ class InvoiceApp(tk.Tk):
 
         # 真正装内容的 Frame（放在 Canvas 里）
         self._body = tk.Frame(self._canvas, bg="#F5F7FA", padx=20, pady=12)
-        self._body.pack_propagate(False)   # 防止内容收缩导致滚动失效
         self._body_win = self._canvas.create_window(
-            (0, 0), window=self._body, anchor="nw"
+            (0, 0), window=self._body, anchor="nw", width=win_w - 40
         )
 
         # Canvas 内容变化 → 更新滚动区域
