@@ -22,46 +22,29 @@ jobs:
           python-version: '3.13'
 
       - name: Download and bundle 7z standalone
-        shell: pwsh
         run: |
-          # Windows  runner 自带 7z.exe（"C:\Program Files\7-Zip\7z.exe"）
-          # 用它解压 extra 包得到独立文件
-          New-Item -ItemType Directory -Force -Path invoice_tool/7z | Out-Null
-          $runner7z = "C:\Program Files\7-Zip\7z.exe"
-          if (-not (Test-Path $runner7z)) {
-            # 兜底：下载 7z2301-extra.7z
-            Invoke-WebRequest -Uri "https://7-zip.org/a/7z2301-extra.7z" -OutFile "invoice_tool/7z/tmp.7z"
-            & $runner7z x "invoice_tool/7z/tmp.7z" "-oinvoice_tool/7z" -y
-            Remove-Item "invoice_tool/7z/tmp.7z" -Force -ErrorAction SilentlyContinue
-          } else {
-            # 主路线：用 runner 自带 7z 解压 extra 包
-            Invoke-WebRequest -Uri "https://7-zip.org/a/7z2301-extra.7z" -OutFile "invoice_tool/7z/tmp.7z"
-            & $runner7z x "invoice_tool/7z/tmp.7z" "-oinvoice_tool/7z" -y
-            Remove-Item "invoice_tool/7z/tmp.7z" -Force -ErrorAction SilentlyContinue
-          }
+          # Windows runner 自带 7z.exe，直接用它解压 extra 包
+          New-Item -ItemType Directory -Force -Path invoice_tool\7z
+          curl -L -o invoice_tool\7z\7z.exe https://7-zip.org/a/7z2301.exe
+          .\invoice_tool\7z\7z.exe x .\invoice_tool\7z\7z.exe -oinvoice_tool\7z -y
+          del invoice_tool\7z\7z.exe
 
       - name: Verify 7z.exe
-        shell: pwsh
         run: |
-          if (Test-Path "invoice_tool/7z/7z.exe") {
-            $size = (Get-Item "invoice_tool/7z/7z.exe").Length
-            Write-Host "SUCCESS: 7z.exe found, size: $size bytes"
-            Get-ChildItem "invoice_tool/7z/" | Format-Table Name, Length
-          } else {
-            Write-Host "FAIL: 7z.exe not found"
-            Get-ChildItem "invoice_tool/7z/" -Recurse | Format-Table Name, Length
-            exit 1
-          }
+          if exist invoice_tool\7z\7z.exe (
+            echo SUCCESS: 7z.exe found
+            dir invoice_tool\7z\
+          ) else (
+            echo FAIL: 7z.exe not found
+            dir invoice_tool\7z\
+            exit /b 1
+          )
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r invoice_tool/requirements.txt
+        run: pip install --upgrade pip && pip install -r invoice_tool\requirements.txt
 
       - name: Build EXE
-        run: |
-          cd invoice_tool
-          pyinstaller invoice_extractor_windows.spec --noconfirm --clean
+        run: pyinstaller invoice_tool\invoice_extractor_windows.spec --noconfirm --clean
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
