@@ -1,0 +1,16 @@
+# 多页小票提取工具 依赖
+# GUI框架
+tkinterdnd2>=0.3.8
+tkintertable>=1.3.2
+
+# PDF处理
+PyMuPDF>=1.23.0
+
+# Excel处理
+openpyxl>=3.1.0
+
+# HTTP请求
+requests>=2.31.0
+
+# 打包工具
+PyInstaller>=6.0.0

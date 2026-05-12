@@ -1,0 +1,10 @@
+{
+    "name": "多页小票提取工具",
+    "version": "1.0.0",
+    "description": "多页小票提取工具 - 支持PDF和图片批量提取小票信息",
+    "model_api": {
+        "base_url": "http://172.18.100.141:8080/v1/chat/completions",
+        "api_key": "2b893fe6-fbc8-4c1d-9ea1-714d01526674",
+        "model_name": "GLM-4.6V"
+    }
+}

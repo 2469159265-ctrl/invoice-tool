@@ -1,0 +1,65 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller receipt_extractor.spec --noconfirm
+
+      - name: Create zip artifact
+        run: |
+          Compress-Archive -Path "dist/*" -DestinationPath "多页小票提取工具-win.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: 多页小票提取工具-win.zip
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: 多页小票提取工具-win.zip
+          body: |
+            ## 多页小票提取工具 v${{ github.ref_name }}
+            
+            基于 GLM-4.6V 本地模型的多页小票/发票信息提取工具
+            
+            ### 功能
+            - 支持 PDF 多页提取
+            - 支持 PNG, JPG, BMP, TIFF 等图片格式
+            - 批量处理
+            - 自动提取：购方、销方、发票说明、总金额、币种、日期、发票号码
+            
+            ### 使用方法
+            1. 解压 zip 文件
+            2. 双击运行 `多页小票提取工具.exe`
+            3. 配置 GLM-4.6V API 地址和密钥
+            4. 添加文件并开始提取
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
