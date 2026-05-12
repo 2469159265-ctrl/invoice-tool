@@ -179,20 +179,46 @@ def _extract_tar(archive_path: Path, dest_dir: Path) -> bool:
 
 
 def _find_bundled_7z() -> str | None:
-    """在 PyInstaller 打包目录里找 7z.exe"""
-    import sys
-    if not getattr(sys, "frozen", False):
-        return None
-    base = getattr(sys, "_MEIPASS", "")
-    if not base:
-        return None
-    # 7z.exe 放在 _MEIPASS/7z/ 目录下
-    bundled = Path(base) / "7z" / "7z.exe"
-    return str(bundled) if bundled.exists() else None
+    """在 PyInstaller 打包目录里找 7z.exe，同时检查 exe 同目录的 7z 文件夹"""
+    import sys, os
+
+    candidates = []
+
+    # ① PyInstaller 打包路径
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", "")
+        if base:
+            candidates.append(os.path.join(base, "7z", "7z.exe"))
+        # ② exe 同目录的 7z 文件夹（开发调试时用）
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, "7z", "7z.exe"))
+
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    return None
 
 
 def _extract_external(archive_path: Path, dest_dir: Path) -> bool:
-    # ① 优先系统自带命令
+    import sys, os
+
+    # Windows：用 where 命令找系统 7z
+    if sys.platform == "win32":
+        for cmd in [
+            ["where", "7z"],
+            ["where", "7z.exe"],
+        ]:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                sys_7z = result.stdout.strip().split("\n")[0].strip()
+                r = subprocess.run(
+                    [sys_7z, "x", str(archive_path), f"-o{dest_dir}", "-y"],
+                    capture_output=True, text=True
+                )
+                if r.returncode == 0:
+                    return True
+
+    # Linux/macOS：用 which 找系统命令
     for cmd in [
         ["7z",    "x", str(archive_path), f"-o{dest_dir}", "-y"],
         ["bsdtar", "xf", str(archive_path), "-C", str(dest_dir)],
@@ -203,16 +229,18 @@ def _extract_external(archive_path: Path, dest_dir: Path) -> bool:
             if result.returncode == 0:
                 return True
 
-    # ② 找不到系统命令 → 尝试打包的 7z.exe
+    # ③ 打包的 7z.exe
     bundled_7z = _find_bundled_7z()
     if bundled_7z:
         result = subprocess.run(
             [bundled_7z, "x", str(archive_path), f"-o{dest_dir}", "-y"],
-            capture_output=True
+            capture_output=True, text=True
         )
         if result.returncode == 0:
             return True
-        # 7z 也失败 → 再试 rarfile（系统有 UnRAR.dll 时）
+
+    # ④ Windows 回退：尝试 python rarfile（需要系统 unrar）
+    if sys.platform == "win32":
         try:
             import rarfile
             with rarfile.RarFile(str(archive_path)) as rf:
