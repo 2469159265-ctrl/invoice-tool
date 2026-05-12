@@ -21,26 +21,20 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Download and extract 7z standalone (extra package)
-        shell: bash
+      - name: Install 7-Zip via winget
         run: |
-          # 7z2301-extra.7z 解压后直接得到 7z.exe + 7z.dll 等文件
-          mkdir -p invoice_tool/7z
-          curl -L -o invoice_tool/7z/7z-extra.7z https://7-zip.org/a/7z2301-extra.7z
-          7z x invoice_tool/7z/7z-extra.7z -oinvoice_tool/7z -y
-          rm invoice_tool/7z/7z-extra.7z
-          ls -la invoice_tool/7z/
+          # 用 winget 安装 7-Zip（winget 在 windows-latest 上预装）
+          winget install --id 7zip.7zip --version 2408 --silent --accept-package-agreements --accept-source-agreements
+          # 验证安装
+          "C:\Program Files\7-Zip\7z.exe" || exit 1
 
-      - name: Verify 7z.exe
-        shell: bash
+      - name: Download 7z extra package (standalone files for bundling)
         run: |
-          if [ -f invoice_tool/7z/7z.exe ]; then
-            echo "SUCCESS: 7z.exe found"
-          else
-            echo "FAIL: 7z.exe not found"
-            ls -la invoice_tool/7z/
-            exit 1
-          fi
+          # 下载 extra 包，解压出独立文件（7z.exe + 7z.dll 等）
+          curl -L -o 7z-extra.7z https://7-zip.org/a/7z2408-extra.7z
+          "C:\Program Files\7-Zip\7z.exe" x 7z-extra.7z -oinvoice_tool/7z -y
+          rm -f 7z-extra.7z
+          ls -la invoice_tool/7z/7z.exe
 
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r invoice_tool/requirements.txt
