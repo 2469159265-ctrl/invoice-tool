@@ -21,22 +21,31 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Download and extract 7z extra package
+      - name: Bundle 7z from runner's own installation
         run: |
-          curl -L -o 7z-extra.7z https://7-zip.org/a/7z2301-extra.7z
-          if not exist "invoice_tool\7z" mkdir "invoice_tool\7z"
-          "C:\Program Files\7-Zip\7z.exe" x 7z-extra.7z -oinvoice_tool\7z -y
-          del 7z-extra.7z
+          # Windows runner 自带 7z.exe，直接复制出来打包
+          $runner7z = "${env:ProgramFiles}\7-Zip\7z.exe"
+          if (-not (Test-Path $runner7z)) {
+            $runner7z = "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
+          }
+          if (Test-Path $runner7z) {
+            New-Item -ItemType Directory -Force -Path invoice_tool\7z | Out-Null
+            Copy-Item $runner7z "invoice_tool\7z\7z.exe"
+            Write-Host "SUCCESS: bundled 7z.exe from runner"
+          } else {
+            Write-Host "WARNING: no system 7z found, trying download..."
+            # 兜底下载（某些 runner 镜像没有预装 7z）
+            Invoke-WebRequest -Uri "https://7-zip.org/a/7z2301.exe" -OutFile "invoice_tool\7z\7z.exe" -UseBasicParsing
+          }
 
-      - name: Verify 7z.exe bundled
+      - name: Verify 7z.exe
         run: |
-          if exist "invoice_tool\7z\7z.exe" (
-            echo SUCCESS: invoice_tool\7z\7z.exe
-          ) else (
-            echo FAIL
-            dir invoice_tool\7z\
-            exit /b 1
-          )
+          if (Test-Path "invoice_tool\7z\7z.exe") {
+            Write-Host "OK: invoice_tool\7z\7z.exe"
+          } else {
+            Write-Host "FAIL: 7z.exe missing"
+            exit 1
+          }
 
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r invoice_tool/requirements.txt
