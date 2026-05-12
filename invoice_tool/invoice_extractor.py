@@ -781,7 +781,7 @@ class InvoiceApp(tk.Tk):
         ).pack(side=tk.LEFT)
 
         # ── 输入文件 ──
-        self._section(self._body, "📁 输入文件")
+        self._section(self._body, "📁 输入文件（文件夹 / 文件 / 压缩包）")
         file_row = tk.Frame(self._body, bg="#F5F7FA")
         file_row.pack(fill=tk.X, pady=(4, 8))
         self.input_var = tk.StringVar()
@@ -883,10 +883,17 @@ class InvoiceApp(tk.Tk):
         messagebox.showinfo("已保存", "模型配置已保存，下次启动自动加载。")
 
     def _browse_input(self):
+        # 优先用目录选择（用户可先手动解压 rar/zip，再上传文件夹）
+        path = filedialog.askdirectory(title="选择文件夹（推荐：先解压压缩包，再选此选项）")
+        if path:
+            self.input_var.set(path)
+            return
+        # 回退：选单个文件
         path = filedialog.askopenfilename(
-            title="选择输入文件",
+            title="选择文件",
             filetypes=[
-                ("支持的文件", "*.zip *.rar *.7z *.tar *.gz *.pdf *.jpg *.jpeg *.png *.bmp *.tiff"),
+                ("支持的文件", "*.pdf *.jpg *.jpeg *.png *.bmp *.tiff"),
+                ("压缩包", "*.zip *.rar *.7z *.tar *.gz *.bz2"),
                 ("所有文件", "*.*"),
             ]
         )
