@@ -1,0 +1,44 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'invoice_tool/invoice_extractor.py'
+      - 'invoice_tool/invoice_extractor_windows.spec'
+      - 'invoice_tool/requirements.txt'
+      - '.github/workflows/windows-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Download 7z standalone (for RAR/ZIP/7z extraction)
+        run: |
+          New-Item -ItemType Directory -Force -Path invoice_tool/7z | Out-Null
+          Invoke-WebRequest -Uri "https://7-zip.org/a/7z2408.exe" -OutFile "invoice_tool/7z/7z.exe"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r invoice_tool/requirements.txt
+
+      - name: Build EXE
+        run: |
+          cd invoice_tool
+          pyinstaller invoice_extractor_windows.spec --noconfirm --clean
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoice-tool-win-${{ github.run_number }}
+          path: invoice_tool/dist/InvoiceTool.exe
+          retention-days: 14
