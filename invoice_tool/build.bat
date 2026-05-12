@@ -37,7 +37,6 @@ echo.
 :: 3. 下载并解压 7z extra 包
 echo [3/5] 下载 7z extra 包...
 if not exist "invoice_tool\7z" mkdir "invoice_tool\7z"
-:: 优先用 PowerShell 的 Invoke-WebRequest（兼容性好）
 powershell -Command "Invoke-WebRequest -Uri 'https://7-zip.org/a/7z2301-extra.7z' -OutFile 'invoice_tool\7z\7z-extra.7z'"
 if errorlevel 1 (
     echo   错误：下载失败
@@ -55,7 +54,6 @@ if not errorlevel 1 (
     echo   使用系统 7z 解压
     7z x "invoice_tool\7z\7z-extra.7z" -oinvoice_tool\7z -y
 ) else (
-    :: 没有系统 7z 用 Python py7zr 库解压
     echo   使用 Python 解压...
     pip install py7zr -q
     python -c "import py7zr; py7zr.SevenZipFile('invoice_tool\\7z\\7z-extra.7z', mode='r').extractall('invoice_tool\\7z')"
