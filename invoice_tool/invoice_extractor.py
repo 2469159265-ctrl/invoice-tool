@@ -640,7 +640,13 @@ class InvoiceApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("发票识别统计工具 v1.4")
-        self.geometry("840x680")
+        # 自适应屏幕：窗口不超过屏幕 90%，最小 600x500
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        win_w = min(int(sw * 0.9), 900)
+        win_h = min(int(sh * 0.88), 800)
+        self.geometry(f"{win_w}x{win_h}")
+        self.minsize(600, 500)
         self.resizable(True, True)
         self.configure(bg="#F5F7FA")
         cfg = load_config()
@@ -674,6 +680,7 @@ class InvoiceApp(tk.Tk):
 
         # 真正装内容的 Frame（放在 Canvas 里）
         self._body = tk.Frame(self._canvas, bg="#F5F7FA", padx=20, pady=12)
+        self._body.pack_propagate(False)   # 防止内容收缩导致滚动失效
         self._body_win = self._canvas.create_window(
             (0, 0), window=self._body, anchor="nw"
         )
@@ -710,7 +717,7 @@ class InvoiceApp(tk.Tk):
                      bg="#F5F7FA", font=("微软雅黑", 9)).pack(side=tk.LEFT)
             setattr(self, var_name, tk.StringVar(value=default))
             tk.Entry(row, textvariable=getattr(self, var_name),
-                     font=("Consolas", 9), width=width).pack(side=tk.LEFT, ipady=2)
+                     font=("Consolas", 9)).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=2)
 
         r3 = tk.Frame(vf, bg="#F5F7FA")
         r3.pack(fill=tk.X, pady=2)
@@ -719,9 +726,9 @@ class InvoiceApp(tk.Tk):
         self.vision_key_var = tk.StringVar(value=self._cfg.get("vision_key", ""))
         self.vision_key_entry = tk.Entry(
             r3, textvariable=self.vision_key_var,
-            font=("Consolas", 9), width=34, show="*"
+            font=("Consolas", 9), show="*"
         )
-        self.vision_key_entry.pack(side=tk.LEFT, ipady=2)
+        self.vision_key_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=2)
         self.show_vision_key = tk.BooleanVar(value=False)
         tk.Checkbutton(
             r3, text="显示", variable=self.show_vision_key,
@@ -747,7 +754,7 @@ class InvoiceApp(tk.Tk):
                      bg="#F5F7FA", font=("微软雅黑", 9)).pack(side=tk.LEFT)
             setattr(self, var_name, tk.StringVar(value=default))
             tk.Entry(row, textvariable=getattr(self, var_name),
-                     font=("Consolas", 9), width=width).pack(side=tk.LEFT, ipady=2)
+                     font=("Consolas", 9)).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=2)
 
         r6 = tk.Frame(tf, bg="#F5F7FA")
         r6.pack(fill=tk.X, pady=2)
@@ -756,9 +763,9 @@ class InvoiceApp(tk.Tk):
         self.text_key_var = tk.StringVar(value=self._cfg.get("text_key", ""))
         self.text_key_entry = tk.Entry(
             r6, textvariable=self.text_key_var,
-            font=("Consolas", 9), width=34, show="*"
+            font=("Consolas", 9), show="*"
         )
-        self.text_key_entry.pack(side=tk.LEFT, ipady=2)
+        self.text_key_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=2)
         self.show_text_key = tk.BooleanVar(value=False)
         tk.Checkbutton(
             r6, text="显示", variable=self.show_text_key,
@@ -786,7 +793,7 @@ class InvoiceApp(tk.Tk):
         file_row.pack(fill=tk.X, pady=(4, 8))
         self.input_var = tk.StringVar()
         tk.Entry(file_row, textvariable=self.input_var,
-                 font=("微软雅黑", 10), width=57).pack(side=tk.LEFT, ipady=4)
+                 font=("微软雅黑", 10)).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=4)
         tk.Button(
             file_row, text="浏览", command=self._browse_input,
             bg="#2E86C1", fg="white", font=("微软雅黑", 10), relief="flat",
@@ -801,7 +808,7 @@ class InvoiceApp(tk.Tk):
             Path.home() / "Desktop" / f"发票识别结果_{datetime.now():%Y%m%d_%H%M%S}.xlsx"
         ))
         tk.Entry(out_row, textvariable=self.output_var,
-                 font=("微软雅黑", 10), width=57).pack(side=tk.LEFT, ipady=4)
+                 font=("微软雅黑", 10)).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=4)
         tk.Button(
             out_row, text="浏览", command=self._browse_output,
             bg="#2E86C1", fg="white", font=("微软雅黑", 10), relief="flat",
@@ -832,7 +839,7 @@ class InvoiceApp(tk.Tk):
         self.progress_var = tk.DoubleVar(value=0)
         self.progress = ttk.Progressbar(
             self._body, variable=self.progress_var, maximum=100,
-            length=700, mode="determinate"
+            length=700, mode="determinate",
         )
         self.progress.pack(fill=tk.X, pady=(8, 2))
         self.progress_label = tk.StringVar(value="就绪")
