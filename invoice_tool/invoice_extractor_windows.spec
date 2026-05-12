@@ -10,14 +10,14 @@ hiddenimports = [
     "configparser",
     "tkinter", "tkinter.ttk", "tkinter.scrolledtext",
     "tkinter.filedialog", "tkinter.messagebox", "tkinter.font",
-    "openai", "openai._openai_threads",
+    "openai",
 ]
 # PyMuPDF 资源文件（字体等）
 datas += collect_data_files("fitz")
 # ── 7z.exe 便携解压支持（必须提前放入 invoice_tool/7z/7z.exe）────
 _7z_src = os.path.join("invoice_tool", "7z", "7z.exe")
 if os.path.exists(_7z_src):
-    datas.append((os.path.join("7z", "7z.exe"), _7z_src, "DATA"))
+    datas.append((_7z_src, "7z", "DATA"))
 
 a = Analysis(
     ['invoice_extractor.py'],
