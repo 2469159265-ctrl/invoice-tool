@@ -35,19 +35,19 @@ jobs:
 
       - name: Create zip artifact
         run: |
-          Compress-Archive -Path "dist/*" -DestinationPath "多页小票提取工具-win.zip" -Force
+          Compress-Archive -Path "dist/*" -DestinationPath "MultiPageReceiptTool-win.zip" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
           name: windows-exe
-          path: 多页小票提取工具-win.zip
+          path: MultiPageReceiptTool-win.zip
 
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: 多页小票提取工具-win.zip
+          files: MultiPageReceiptTool-win.zip
           body: |
             ## 多页小票提取工具 v${{ github.ref_name }}
 

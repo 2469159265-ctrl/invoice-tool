@@ -4,8 +4,8 @@ import os
 
 block_cipher = None
 
-# 应用程序名称（中文）
-app_name = "多页小票提取工具"
+# 应用程序名称
+app_name = "MultiPageReceiptTool"
 
 a = Analysis(
     ['receipt_extractor_gui.py'],
