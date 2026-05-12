@@ -21,30 +21,24 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Download and bundle 7z standalone
+      - name: Download and extract 7z standalone
+        shell: bash
         run: |
-          # Windows runner 自带 7z.exe，直接用它解压 extra 包
-          New-Item -ItemType Directory -Force -Path invoice_tool\7z
-          curl -L -o invoice_tool\7z\7z.exe https://7-zip.org/a/7z2301.exe
-          .\invoice_tool\7z\7z.exe x .\invoice_tool\7z\7z.exe -oinvoice_tool\7z -y
-          del invoice_tool\7z\7z.exe
+          # Windows runner 自带 7z，用它解压 extra 包得到真正可执行文件
+          mkdir -p invoice_tool/7z
+          curl -L -o invoice_tool/7z/7z.exe https://7-zip.org/a/7z2301.exe
+          7z x invoice_tool/7z/7z.exe -oinvoice_tool/7z -y
+          rm invoice_tool/7z/7z.exe
+          ls -la invoice_tool/7z/
 
       - name: Verify 7z.exe
-        run: |
-          if exist invoice_tool\7z\7z.exe (
-            echo SUCCESS: 7z.exe found
-            dir invoice_tool\7z\
-          ) else (
-            echo FAIL: 7z.exe not found
-            dir invoice_tool\7z\
-            exit /b 1
-          )
+        run: ls -la invoice_tool/7z/7z.exe || exit 1
 
       - name: Install dependencies
-        run: pip install --upgrade pip && pip install -r invoice_tool\requirements.txt
+        run: pip install --upgrade pip && pip install -r invoice_tool/requirements.txt
 
       - name: Build EXE
-        run: pyinstaller invoice_tool\invoice_extractor_windows.spec --noconfirm --clean
+        run: pyinstaller invoice_tool/invoice_extractor_windows.spec --noconfirm --clean
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
