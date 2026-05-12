@@ -21,18 +21,26 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Download and extract 7z standalone
+      - name: Download and extract 7z standalone (extra package)
         shell: bash
         run: |
-          # Windows runner 自带 7z，用它解压 extra 包得到真正可执行文件
+          # 7z2301-extra.7z 解压后直接得到 7z.exe + 7z.dll 等文件
           mkdir -p invoice_tool/7z
-          curl -L -o invoice_tool/7z/7z.exe https://7-zip.org/a/7z2301.exe
-          7z x invoice_tool/7z/7z.exe -oinvoice_tool/7z -y
-          rm invoice_tool/7z/7z.exe
+          curl -L -o invoice_tool/7z/7z-extra.7z https://7-zip.org/a/7z2301-extra.7z
+          7z x invoice_tool/7z/7z-extra.7z -oinvoice_tool/7z -y
+          rm invoice_tool/7z/7z-extra.7z
           ls -la invoice_tool/7z/
 
       - name: Verify 7z.exe
-        run: ls -la invoice_tool/7z/7z.exe || exit 1
+        shell: bash
+        run: |
+          if [ -f invoice_tool/7z/7z.exe ]; then
+            echo "SUCCESS: 7z.exe found"
+          else
+            echo "FAIL: 7z.exe not found"
+            ls -la invoice_tool/7z/
+            exit 1
+          fi
 
       - name: Install dependencies
         run: pip install --upgrade pip && pip install -r invoice_tool/requirements.txt
