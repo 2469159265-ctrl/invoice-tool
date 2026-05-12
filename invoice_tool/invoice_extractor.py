@@ -232,7 +232,7 @@ def _extract_single(archive_path: str, dest_dir: str) -> bool:
     elif ext in (".tar", ".gz", ".bz2", ".xz", ".tgz"):
         return _extract_tar(archive_path, Path(dest_dir))
     elif ext in (".rar",):
-        return _extract_rar(archive_path, Path(dest_dir))
+        return _extract_external(archive_path, Path(dest_dir))
     else:
         return _extract_external(archive_path, Path(dest_dir))
 
